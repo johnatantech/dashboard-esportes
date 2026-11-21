@@ -5,7 +5,7 @@ export default async function handler(req, res) {
       headers: { "X-Auth-Token": process.env.FOOTBALL_DATA_TOKEN },
     });
     const data = await r.json();
-    res.setHeader("Access-Control-Allow-Origin", "*"); // troque pelo seu domínio em produção
+    
     res.setHeader("Cache-Control", "s-maxage=600, stale-while-revalidate=3600");
     res.status(r.status).json(data);
   } catch (e) {
