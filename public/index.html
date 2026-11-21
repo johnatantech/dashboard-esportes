@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brasileirão: painel da tabela</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f4ee;--surface:#fff;--ink:#14261d;--mute:#5d6e64;--line:#d9dfd3;--w:#1f7a4d;--d:#e0b21d;--l:#c4472f;--accent:#1f7a4d;--top:#2f6fdb;--mid:#8a63d2;--rel:#c4472f}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1f17;--surface:#173026;--ink:#eef3e9;--mute:#9db3a5;--line:#2a4538;--w:#3fb87a;--d:#f0c53a;--l:#e8694f;--accent:#3fb87a;--top:#6b9cf5;--mid:#b394f0;--rel:#e8694f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Barlow,system-ui,sans-serif}
+main{max-width:900px;margin:0 auto;padding:32px 20px 56px}
+h1{font:700 clamp(40px,8vw,72px)/.95 "Barlow Condensed",Impact,sans-serif;margin:0 0 8px}
+.sub{color:var(--mute);margin:0 0 24px;max-width:60ch}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi b{display:block;font:700 24px/1.15 "Barlow Condensed",sans-serif}
+.kpi span{color:var(--mute);font-size:14px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px}
+.seg button{border:0;background:none;color:var(--mute);font:600 14px Barlow,sans-serif;padding:7px 14px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+button:focus-visible,input:focus-visible,.row:focus-visible{outline:3px solid var(--top);outline-offset:2px}
+input{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font:inherit;min-width:180px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--mute);margin:0 0 14px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+#list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.row{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:8px;padding:10px 14px;cursor:pointer}
+.row.z-top{border-left-color:var(--top)}.row.z-mid{border-left-color:var(--mid)}.row.z-rel{border-left-color:var(--rel)}
+.top{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center}
+.pos{font:700 22px "Barlow Condensed",sans-serif;color:var(--mute)}
+.name{font-weight:600;display:flex;align-items:center;gap:8px}
+.name img{width:22px;height:22px;object-fit:contain}
+.name small{color:var(--mute);font-weight:400}
+.form{display:inline-flex;gap:2px;margin-left:4px}
+.form i{width:8px;height:8px;border-radius:50%}
+.pts{font:700 28px/1 "Barlow Condensed",sans-serif;text-align:right}
+.pts small{display:block;font:500 11px Barlow;color:var(--mute)}
+.stack{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:8px 0 0 38px;background:var(--line)}
+.stack span{display:block}
+.detail{display:none;margin:12px 0 2px 38px;gap:10px;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));font-size:14px}
+.row.open .detail{display:grid}
+.detail div{background:var(--bg);border-radius:6px;padding:8px 10px}
+.detail b{display:block;font:700 20px "Barlow Condensed",sans-serif}
+.msg{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px;text-align:center;color:var(--mute)}
+.msg button{margin-top:12px;border:0;background:var(--accent);color:#fff;font:600 14px Barlow;padding:8px 16px;border-radius:999px;cursor:pointer}
+select{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font:inherit}
+.mrow{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px;display:grid;gap:10px;align-items:center}
+.prow{grid-template-columns:28px 1fr auto}
+.match{grid-template-columns:1fr auto 1fr;font-weight:600}
+.match .h{text-align:right}
+.sc{font:700 26px "Barlow Condensed",sans-serif;min-width:70px;text-align:center}
+.sc small{display:block;font:500 11px Barlow;color:var(--mute)}
+.cr{width:22px;height:22px;object-fit:contain;flex:none}
+.match>span:not(.sc){display:flex;align-items:center;gap:8px}
+.match .h{justify-content:flex-end}
+.av{width:44px;height:44px;border-radius:50%;background:var(--line);color:var(--mute);display:grid;place-items:center;font:700 15px "Barlow Condensed",sans-serif;overflow:hidden;flex:none}
+.av img{width:100%;height:100%;object-fit:cover}
+.name small.tm{display:flex;align-items:center;gap:6px;margin:0}
+.tm .cr{width:16px;height:16px}
+.nx{margin:6px 0 0;display:flex;align-items:center;gap:6px}
+footer{margin-top:28px;color:var(--mute);font-size:13px}
+</style>
+</head>
+<body>
+<main>
+<h1 id="title">Brasileirão</h1>
+<p class="sub" id="sub"></p>
+<div class="bar">
+  <div class="seg" role="group" aria-label="Campeonato" id="leagues"></div>
+</div>
+<div class="seg" role="group" aria-label="Seção" id="views" style="margin-bottom:12px"></div>
+<section class="kpis" id="kpis" aria-label="Destaques"></section>
+<div class="bar" id="ctrl">
+  <div class="seg" role="group" aria-label="Ordenar por" id="seg"></div>
+  <input id="q" type="search" placeholder="Buscar time" aria-label="Buscar time">
+</div>
+<p class="legend" id="legend"></p>
+<ol id="list" aria-live="polite"></ol>
+<footer id="foot"></footer>
+</main>
+<script>
+/* ========= CONFIGURAÇÃO =========
+   Brasileirão: TheSportsDB (chave gratuita "123", sem cadastro).
+   A tabela gratuita é limitada a ligas "featured". Se a sua não retornar dados,
+   troque a função loadBR por uma chamada à football-data.org (código BSA) via um
+   proxy seu (Vercel/Netlify Function), para não expor o token no navegador. */
+var API_KEY="123", BR_LEAGUE=4351, BR_SEASON="2026";
+/* Para a tabela completa (20 times): publique api/standings.js (Vercel) e cole aqui a URL,
+   por exemplo "https://seu-projeto.vercel.app/api/standings". Vazio = usa a TheSportsDB gratuita (só Top 5). */
+var PROXY_URL="/api/standings";
+
+var LEAGUES={
+  br:{label:"Brasileirão Série A",title:"Brasileirão",
+    zones:function(r){return r<=6?"top":r<=12?"mid":r>=17?"rel":""},
+    legend:[["var(--top)","Libertadores (1º ao 6º)"],["var(--mid)","Sul-Americana (7º ao 12º)"],["var(--rel)","Rebaixamento (17º ao 20º)"]],
+    load:loadBR},
+  pl:{label:"Premier League (captura)",title:"Premier League",
+    zones:function(r){return r<=4?"top":r>=18?"rel":""},
+    legend:[["var(--top)","Top 4"],["var(--rel)","Zona de rebaixamento"]],
+    load:loadPL}
+};
+var SORTS={rank:["Posição",function(a,b){return a.rank-b.rank}],w:["Vitórias",function(a,b){return b.w-a.w||a.rank-b.rank}],d:["Empates",function(a,b){return b.d-a.d||a.rank-b.rank}],l:["Derrotas",function(a,b){return b.l-a.l||a.rank-b.rank}],pct:["Aproveitamento",function(a,b){return b.pct-a.pct||a.rank-b.rank}]};
+
+var $=function(i){return document.getElementById(i)};
+var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
+var state={league:"br",view:"table",round:null,nround:null,sort:"rank",open:null,q:"",data:[],status:"loading",stamp:""};
+
+function norm(t){var g=t.w+t.d+t.l;t.g=t.g||g;t.pts=t.pts!=null?t.pts:t.w*3+t.d;t.pct=t.g?Math.round(t.pts/(t.g*3)*100):0;return t}
+
+function loadBR(){return PROXY_URL?loadFD():loadTSDB()}
+function loadFD(){
+  return fetch(PROXY_URL).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(function(j){
+    var s=j&&j.standings&&(j.standings.filter(function(x){return x.type==="TOTAL"})[0]||j.standings[0]);
+    if(!s||!s.table||!s.table.length)throw new Error("O proxy não retornou a tabela.");
+    return s.table.map(function(t){return norm({id:t.team.id,rank:t.position,name:t.team.shortName||t.team.name,ab:t.team.tla||"",badge:t.team.crest||"",g:t.playedGames,w:t.won,d:t.draw,l:t.lost,gf:t.goalsFor,ga:t.goalsAgainst,sg:t.goalDifference,pts:t.points,form:(t.form||"").replace(/,/g,"")})});
+  });
+}
+function loadTSDB(){
+  var ctl=new AbortController(),to=setTimeout(function(){ctl.abort()},10000);
+  var url="https://www.thesportsdb.com/api/v1/json/"+API_KEY+"/lookuptable.php?l="+BR_LEAGUE+"&s="+BR_SEASON;
+  return fetch(url,{signal:ctl.signal}).then(function(r){clearTimeout(to);if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
+  .then(function(j){
+    if(!j||!j.table||!j.table.length)throw new Error("A API não retornou tabela para esta liga/temporada.");
+    return j.table.map(function(t){return norm({rank:+t.intRank,name:t.strTeam,ab:"",badge:t.strBadge||"",g:+t.intPlayed,w:+t.intWin,d:+t.intDraw,l:+t.intLoss,gf:+t.intGoalsFor,ga:+t.intGoalsAgainst,sg:+t.intGoalDifference,pts:+t.intPoints,form:t.strForm||""})});
+  });
+}
+function loadPL(){
+  var rows=[[1,"Arsenal","ARS",9,0,1],[2,"Brighton & Hove Albion","BRI",7,1,2],[3,"Manchester City","MCI",7,1,3],[4,"Liverpool","LFC",5,3,2],[5,"AFC Bournemouth","BOU",5,3,3],[6,"Chelsea","CFC",5,2,4],[7,"Everton","EVE",4,4,2],[8,"Leeds United","LEE",3,6,2],[9,"Tottenham Hotspur","TOT",4,3,4],[10,"Brentford","BRE",3,5,2],[11,"Aston Villa","AVL",3,5,3],[12,"Newcastle United","NEW",3,3,4],[13,"Coventry City","COV",4,0,7],[14,"Hull City","HUL",2,5,3],[15,"Fulham","FUL",2,5,4],[16,"Ipswich Town","IPS",3,2,6],[17,"Nottingham Forest","NFO",2,3,6],[18,"Sunderland","SUN",2,3,6],[19,"Manchester United","MUN",1,5,4],[20,"Crystal Palace","CRY",2,1,8]];
+  return Promise.resolve(rows.map(function(t){return norm({rank:t[0],name:t[1],ab:t[2],badge:"",w:t[3],d:t[4],l:t[5],form:""})}));
+}
+
+function load(){
+  state.status="loading";state.open=null;render();
+  LEAGUES[state.league].load().then(function(d){
+    state.data=d;state.status="ok";
+    state.stamp=state.league==="br"?"Dados ao vivo de TheSportsDB, carregados em "+new Date().toLocaleString("pt-BR")+".":"Captura estática de 21/11/2026. Gols e saldo não estavam disponíveis nesta consulta.";
+    render();
+  }).catch(function(e){state.status="error";state.err=e.name==="AbortError"?"A API demorou demais para responder.":e.message;render()});
+}
+
+function best(f){return state.data.slice().sort(f)[0]}
+function chips(form){return form?'<span class="form" title="Últimos jogos">'+form.split("").slice(-5).map(function(c){return'<i style="background:var(--'+(c==="W"?"w":c==="D"?"d":"l")+')"></i>'}).join("")+"</span>":""}
+function head(){
+  var L=LEAGUES[state.league];
+  $("title").textContent=L.title;
+  $("sub").textContent="Classificação atualizada. Ordene, filtre e clique em um time para ver o aproveitamento.";
+  $("leagues").innerHTML=Object.keys(LEAGUES).map(function(k){return'<button data-l="'+k+'" aria-pressed="'+(k===state.league)+'">'+L2(k)+'</button>'}).join("");
+  $("seg").innerHTML=Object.keys(SORTS).map(function(k){return'<button data-k="'+k+'" aria-pressed="'+(k===state.sort)+'">'+SORTS[k][0]+'</button>'}).join("");
+  $("legend").innerHTML=[["var(--w)","Vitórias"],["var(--d)","Empates"],["var(--l)","Derrotas"]].concat(L.legend).map(function(x){return'<span><i style="background:'+x[0]+'"></i>'+x[1]+"</span>"}).join("");
+}
+function L2(k){return LEAGUES[k].label}
+
+function render(){
+  head();drawViews();
+  if(state.view!=="table"){renderView();return}
+  var list=$("list");
+  if(state.status==="loading"){$("kpis").innerHTML="";list.innerHTML='<li class="msg">Carregando a classificação…</li>';$("foot").textContent="";return}
+  if(state.status==="error"){$("kpis").innerHTML="";list.innerHTML='<li class="msg">Não foi possível carregar a tabela: '+esc(state.err)+'<br><button id="retry">Tentar de novo</button></li>';$("foot").textContent="Dica: abra a aba Premier League (captura) para ver o painel com dados salvos.";$("retry").onclick=load;return}
+  var d=state.data,l=d[0],a=best(SORTS.pct[1]),e=best(SORTS.d[1]),p=best(SORTS.l[1]);
+  var partial=d.length<16;
+  $("kpis").innerHTML=partial?'<div class="msg" style="grid-column:1/-1">A API gratuita retornou só os '+d.length+' primeiros times, então os destaques ficam ocultos para não mostrar dados parciais. Configure <code>PROXY_URL</code> para ver a tabela completa.</div>':[["Líder",l.name+" ("+l.pts+" pts)"],["Maior aproveitamento",a.name+" ("+a.pct+"%)"],["Mais empates",e.name+" ("+e.d+")"],["Mais derrotas",p.name+" ("+p.l+")"]].map(function(k){return'<div class="kpi"><b>'+esc(k[1])+'</b><span>'+k[0]+"</span></div>"}).join("");
+  var Z=LEAGUES[state.league].zones,q=state.q;
+  var rows=d.filter(function(t){return t.name.toLowerCase().indexOf(q)>-1}).sort(SORTS[state.sort][1]);
+  list.innerHTML=rows.length?rows.map(function(t){
+    var z=Z(t.rank),id=esc(t.name),o=state.open===t.name;
+    var goals=t.gf!=null?'<div><b>'+t.gf+" / "+t.ga+'</b>Gols pró / contra</div><div><b>'+(t.sg>0?"+":"")+t.sg+'</b>Saldo de gols</div>':"";
+    return'<li class="row'+(z?" z-"+z:"")+(o?" open":"")+'" tabindex="0" role="button" aria-expanded="'+o+'" data-n="'+id+'"><div class="top"><span class="pos">'+t.rank+'</span><span class="name">'+(t.badge?'<img src="'+esc(t.badge)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">':"")+esc(t.name)+(t.ab?"<small>"+t.ab+"</small>":"")+chips(t.form)+'</span><span class="pts">'+t.pts+'<small>pontos</small></span></div><div class="stack" title="V/E/D"><span style="width:'+t.w/t.g*100+'%;background:var(--w)"></span><span style="width:'+t.d/t.g*100+'%;background:var(--d)"></span><span style="width:'+t.l/t.g*100+'%;background:var(--l)"></span></div><div class="detail"><div><b>'+t.g+'</b>Jogos</div><div><b>'+t.w+"V "+t.d+"E "+t.l+'D</b>Campanha</div><div><b>'+t.pct+'%</b>Aproveitamento</div><div><b>'+(t.pts/t.g).toFixed(2)+'</b>Pontos por jogo</div>'+goals+(t.id?'<div class="next" style="grid-column:1/-1">Carregando próximos jogos…</div>':"")+"</div></li>";
+  }).join(""):'<li class="msg">Nenhum time encontrado. Tente outro nome.</li>';
+  $("foot").textContent=state.stamp;if(state.open)fillNext();
+}
+
+$("leagues").onclick=function(e){var k=e.target.dataset.l;if(k&&k!==state.league){state.league=k;state.view="table";state.q="";$("q").value="";load()}};
+$("seg").onclick=function(e){var k=e.target.dataset.k;if(k){state.sort=k;render()}};
+$("q").oninput=function(e){state.q=e.target.value.trim().toLowerCase();render()};
+function toggle(el){var r=el.closest(".row");if(!r)return;var n=r.dataset.n;state.open=state.open===n?null:n;render();var x=[].filter.call(document.querySelectorAll(".row"),function(y){return y.dataset.n===n})[0];if(x)x.focus()}
+$("list").onclick=function(e){toggle(e.target)};
+$("list").onkeydown=function(e){if(e.target.classList.contains("row")&&(e.key==="Enter"||e.key===" ")){e.preventDefault();toggle(e.target)}};
+/* ===== Resultados, artilharia e assistências (football-data.org via proxy) ===== */
+var VIEWS={table:"Classificação",next:"Próximos jogos",matches:"Resultados",scorers:"Artilharia",assists:"Assistências"};
+var BASE=PROXY_URL?PROXY_URL.replace(/standings$/,""):"";
+var cache={};
+function tn(t){return t.shortName||t.name}
+function getJSON(n){
+  if(cache[n])return Promise.resolve(cache[n]);
+  return fetch(BASE+n).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(function(j){cache[n]=j;return j});
+}
+function drawViews(){
+  var on=state.league==="br"&&!!PROXY_URL,t=state.view==="table";
+  $("views").style.display=on?"":"none";
+  $("views").innerHTML=Object.keys(VIEWS).map(function(k){return'<button data-v="'+k+'" aria-pressed="'+(k===state.view)+'">'+VIEWS[k]+"</button>"}).join("");
+  $("ctrl").style.display=t?"":"none";$("legend").style.display=t?"":"none";
+}
+function renderView(){
+  var v=state.view,n=(v==="matches"||v==="next")?"matches":"scorers",list=$("list");
+  $("kpis").innerHTML="";
+  list.innerHTML='<li class="msg">Carregando…</li>';
+  $("foot").textContent="Fonte: football-data.org, via proxy próprio.";
+  getJSON(n).then(function(j){
+    if(state.view!==v)return;
+    list.innerHTML=(v==="matches"||v==="next")?matchesHTML(j,v):playersHTML(j,v);
+    if(v==="scorers"||v==="assists"){$("foot").textContent+=" Fotos da Wikipédia, quando encontradas; sem foto, aparecem as iniciais.";loadPhotos()}
+    if(v==="assists")$("foot").textContent+=" Considera os jogadores da lista de artilharia; quem não marcou gols pode não aparecer.";
+  }).catch(function(e){
+    if(state.view!==v)return;
+    list.innerHTML='<li class="msg">Não foi possível carregar: '+esc(e.message)+'<br><button id="retry2">Tentar de novo</button></li>';
+    $("retry2").onclick=function(){renderView()};
+  });
+}
+function crest(t){return t&&t.crest?'<img class="cr" src="'+esc(t.crest)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">':""}
+function ini(n){var p=n.trim().split(/\s+/);return(p[0][0]+(p.length>1?p[p.length-1][0]:"")).toUpperCase()}
+function upcoming(j){return(j.matches||[]).filter(function(m){return m.status==="SCHEDULED"||m.status==="TIMED"}).sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate)})}
+function fdate(m){return new Date(m.utcDate).toLocaleString("pt-BR",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}
+function fillNext(){
+  var t=state.data.filter(function(x){return x.name===state.open})[0],el=document.querySelector(".row.open .next");
+  if(!t||!el||!t.id)return;
+  getJSON("matches").then(function(j){
+    var ms=upcoming(j).filter(function(m){return m.homeTeam.id===t.id||m.awayTeam.id===t.id}).slice(0,3);
+    el.innerHTML=ms.length?'<span style="color:var(--mute)">Próximos jogos</span>'+ms.map(function(m){var home=m.homeTeam.id===t.id,o=home?m.awayTeam:m.homeTeam;
+      return'<p class="nx">'+fdate(m)+" · "+(home?"em casa":"fora")+" · "+crest(o)+esc(tn(o))+"</p>"}).join(""):"Sem jogos agendados.";
+  }).catch(function(){el.textContent="Não foi possível carregar os próximos jogos."});
+}
+function matchesHTML(j,mode){
+  var nx=mode==="next",key=nx?"nround":"round";
+  var all=nx?upcoming(j):(j.matches||[]).filter(function(m){return m.status==="FINISHED"});
+  if(!all.length)return'<li class="msg">'+(nx?"Nenhum jogo agendado.":"Nenhum jogo finalizado ainda.")+"</li>";
+  var rs=[];all.forEach(function(m){if(rs.indexOf(m.matchday)<0)rs.push(m.matchday)});
+  rs.sort(function(a,b){return nx?a-b:b-a});
+  if(rs.indexOf(state[key])<0)state[key]=rs[0];
+  var ms=all.filter(function(m){return m.matchday===state[key]}).sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate)});
+  return'<li><label>Rodada <select id="'+key+'">'+rs.map(function(r){return'<option value="'+r+'"'+(r===state[key]?" selected":"")+">"+r+"</option>"}).join("")+"</select></label></li>"+
+  ms.map(function(m){var d=new Date(m.utcDate),sc;
+    if(nx)sc=d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})+"<small>"+d.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short"})+"</small>";
+    else sc=m.score.fullTime.home+" × "+m.score.fullTime.away+"<small>"+d.toLocaleDateString("pt-BR",{day:"2-digit",month:"short"})+"</small>";
+    return'<li class="mrow match"><span class="h">'+esc(tn(m.homeTeam))+crest(m.homeTeam)+'</span><span class="sc">'+sc+"</span><span>"+crest(m.awayTeam)+esc(tn(m.awayTeam))+"</span></li>"}).join("");
+}
+function playersHTML(j,v){
+  var a=(j.scorers||[]).map(function(s){return{n:s.player.name,tm:s.team,g:s.goals||0,a:s.assists||0,p:s.penalties||0}});
+  if(v==="assists")a=a.filter(function(x){return x.a>0});
+  a.sort(function(x,y){return v==="assists"?(y.a-x.a)||(y.g-x.g):(y.g-x.g)||(y.a-x.a)});
+  if(!a.length)return'<li class="msg">'+(v==="assists"?"A API não informou assistências para esta competição.":"Nenhum dado de artilharia disponível.")+"</li>";
+  return a.slice(0,20).map(function(x,i){
+    var val=v==="assists"?x.a:x.g,lab=v==="assists"?"assistências":"gols"+(x.p?" ("+x.p+" pên.)":"");
+    return'<li class="mrow prow"><span class="pos">'+(i+1)+'</span><span class="name"><span class="av" data-n="'+esc(x.n)+'" data-t="'+esc(tn(x.tm))+'">'+esc(ini(x.n))+"</span><span>"+esc(x.n)+'<small class="tm">'+crest(x.tm)+esc(tn(x.tm))+'</small></span></span><span class="pts">'+val+"<small>"+lab+"</small></span></li>"}).join("");
+}
+/* Fotos: Wikipédia (pt). Só aceita se for futebolista E o texto citar o clube do jogador. */
+var photos={};
+function photoFor(n,team){
+  var k=n+"|"+team;
+  if(k in photos)return Promise.resolve(photos[k]);
+  var toks=team.split(" ").filter(function(w){return w.length>3&&!/^clube$/i.test(w)});
+  return fetch("https://pt.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(n.replace(/ /g,"_")))
+    .then(function(r){return r.ok?r.json():null}).then(function(j){
+      var txt=((j&&j.extract)||"").toLowerCase();
+      var ok=j&&j.type==="standard"&&j.thumbnail&&/futebol/i.test(j.description||"")&&toks.some(function(w){return txt.indexOf(w.toLowerCase())>-1});
+      return photos[k]=ok?j.thumbnail.source:"";
+    }).catch(function(){return photos[k]=""});
+}
+function loadPhotos(){
+  [].forEach.call(document.querySelectorAll(".av"),function(el){
+    photoFor(el.dataset.n,el.dataset.t).then(function(u){
+      if(!u||!el.isConnected)return;
+      var im=new Image();im.alt="";im.referrerPolicy="no-referrer";
+      im.onload=function(){el.textContent="";el.appendChild(im)};im.src=u;
+    });
+  });
+}
+$("views").onclick=function(e){var k=e.target.dataset.v;if(k){state.view=k;render()}};
+$("list").onchange=function(e){var id=e.target.id;if(id==="round"||id==="nround"){state[id]=+e.target.value;renderView()}};
+
+load();
+</script>
+</body>
+</html>
